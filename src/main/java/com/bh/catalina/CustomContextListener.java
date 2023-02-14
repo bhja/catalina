@@ -1,5 +1,7 @@
 package com.bh.catalina;
 
+import java.io.File;
+import java.io.PrintWriter;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import jnr.constants.platform.Signal;
@@ -22,6 +24,17 @@ public class CustomContextListener implements ServletContextListener {
   Logger logger = LoggerFactory.getLogger(CustomContextListener.class);
   @Override
   public void contextInitialized(ServletContextEvent sce) {
+    try{
+      File f = new File("/tmp/logger");
+      if(f.exists()){
+        logger.info("Shutdown was not graceful");
+        logAuditTrail(ExitStatus.FORCEFUL,-1);
+        f.delete();
+      }
+      f.createNewFile();
+    }catch (Exception e){
+      logger.info("File does not exist");
+    }
     logger.info("Creating the posix handler");
     posixHandler();
   }
@@ -37,11 +50,8 @@ public class CustomContextListener implements ServletContextListener {
     };
     final POSIX posix = POSIXFactory.getPOSIX(new DefaultPOSIXHandler(), true);
     posix.signal(Signal.SIGKILL, handler);
-    posix.signal(Signal.SIGSTOP,handler);
     posix.signal(Signal.SIGINT,handler);
-    posix.signal(Signal.SIGHUP,handler);
     posix.signal(Signal.SIGTERM,handler);
-    posix.signal(Signal.SIGSTOP,handler);
 
 
   }
@@ -49,20 +59,31 @@ public class CustomContextListener implements ServletContextListener {
   public void contextDestroyed(ServletContextEvent sce) {
       logger.info("Context destroyed with graceful shutdown");
       logAuditTrail(ExitStatus.GRACEFUL,0);
+      try{
+        File f = new File("/tmp/logger");
+        if(f.exists()){
+          f.delete();
+        }else{
+          logger.error("File not created in the startup");
+        }
+      }catch (Exception e){
+        logger.error("could not delete the file");
+      }
   }
 
   public void logAuditTrail(ExitStatus status,int signal){
       if (status == ExitStatus.GRACEFUL) {
-          logger.info("Shutdown was in the right method");
+          logger.info("Regular shutdown in progress");
       }else{
-        logger.warn("It is a signaled status"  + signal);
+        logger.warn("It is a signaled status "  + signal);
       }
 
   }
 
   enum ExitStatus{
     GRACEFUL,
-    POSIX_SIGNAL
+    POSIX_SIGNAL,
+    FORCEFUL
 
   }
 
