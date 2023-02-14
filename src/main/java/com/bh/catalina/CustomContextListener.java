@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 import jnr.constants.platform.Signal;
 import jnr.posix.POSIX;
 import jnr.posix.POSIXFactory;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
  * Suggestion - Use script to run this command to kill the process and log the
  * same in a audit log when the script executes.
  */
+@WebListener
 public class CustomContextListener implements ServletContextListener {
 
 
