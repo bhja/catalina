@@ -34,6 +34,8 @@ public class CustomContextListener implements ServletContextListener {
         f.delete();
       }
       f.createNewFile();
+      //This is another way to add the shutdown hook.
+      //Runtime.getRuntime().addShutdownHook(new CustomShutdown());
     }catch (Exception e){
       logger.info("File does not exist");
     }
